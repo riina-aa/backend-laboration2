@@ -29,7 +29,7 @@ app.post("/workexperience", (req, res) => {
         return res.status(400).json({ message: "Arbetsplatsens namn, jobbtitel och startdatum krävs." }); 
 
     const stmt = db.prepare(`
-        INSERT INTO workexperience (companyname, jobtitle, location, startdate, enddate, description) VALUES (?, ?. ?, ?, ?, ?)
+        INSERT INTO workexperience (companyname, jobtitle, location, startdate, enddate, description) VALUES (?, ?, ?, ?, ?, ?)
         `);
         
     try {
@@ -47,11 +47,12 @@ app.put("/workexperience/:id", (req, res) => {
         return res.status(400).json({ message: "Arbetsplatsens namn, jobbtitel och startdatum krävs." });
 
     const stmt = db.prepare(`
-        UPDATE workexperience SET companyname = ?, jobtitle = ?, location = ?, startdate = ?, enddate = ?, dexcription = ? WHERE id = ?
+        UPDATE workexperience SET companyname = ?, jobtitle = ?, location = ?, startdate = ?, enddate = ?, description = ? WHERE id = ?
         `);
     
     try {
-        const result = stmt.run(companyname, jobtitle, location, startdate, enddate, description); 
+        const result = stmt.run(companyname, jobtitle, location, startdate, enddate, description, req.params.id); 
+        res.status(201).json({ id: result.lastInsertRowid, ...req.body });
     } catch (error) {
         res.status(500).json({ message: "Arbetserfarenheten kunde inte uppdateras" }); 
     }
