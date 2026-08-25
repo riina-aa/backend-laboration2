@@ -1,4 +1,4 @@
-const Database = require("better-sqlite3");
+const Database = require("better-sqlite3"); //Importerar paket
 const db = new Database("laboration-2.db"); //Skapar databas
 
 //Skapar tabell i databas
