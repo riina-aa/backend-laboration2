@@ -13,22 +13,22 @@ const app = express();
 app.use(cors()); //Tillåter cross-origin
 app.use(express.json()); //Parsa json-body
 
-//Startar servern
-app.listen(5000, () => console.log("Servern är startad på port: 5000")); 
+
 
 //Routing 
 app.get("/workexperience", (req, res) => {
-    const workexperience = db.prepare("SELECT * FROM workexperience").all(); 
+    const workexperience = db.prepare("SELECT * FROM workexperience ORDER BY startdate DESC").all(); //Hämtar färdig sorterad data från db 
     res.json(workexperience); 
 }); 
 
 app.post("/workexperience", (req, res) => {
     const { companyname, jobtitle, location, startdate, enddate, description } = req.body; 
 
-    if (!companyname || !jobtitle || !startdate)
-        return res.status(400).json({ message: "Arbetsplatsens namn, jobbtitel och startdatum krävs." }); 
+    if (!companyname || !jobtitle || !startdate) //Kontrollerar att avgörande fält inte är tomma
+        return res.status(400).json({ message: "Arbetsplatsens namn, jobbtitel och startdatum krävs." }); //Felmeddelande
 
-    const stmt = db.prepare(`
+    //Data valideras och läggs till i databasen 
+    const stmt = db.prepare(` 
         INSERT INTO workexperience (companyname, jobtitle, location, startdate, enddate, description) VALUES (?, ?, ?, ?, ?, ?)
         `);
         
@@ -36,30 +36,34 @@ app.post("/workexperience", (req, res) => {
         const result = stmt.run(companyname, jobtitle, location, startdate, enddate, description); 
         res.status(201).json({ id: result.lastInsertRowid, ...req.body }); 
     } catch (error) {
-        res.status(500).json({ message: "Arbetserfarenheten kunde inte läggas till" });
+        res.status(500).json({ message: "Arbetserfarenheten kunde inte läggas till" }); //Felmeddelande
     } 
 });
 
 app.put("/workexperience/:id", (req, res) => {
     const { companyname, jobtitle, location, startdate, enddate, description } = req.body; 
 
-    if (!companyname || !jobtitle || !startdate)
+    if (!companyname || !jobtitle || !startdate) //Kontrollerar att avgörande fält inte är tomma
         return res.status(400).json({ message: "Arbetsplatsens namn, jobbtitel och startdatum krävs." });
 
     const stmt = db.prepare(`
         UPDATE workexperience SET companyname = ?, jobtitle = ?, location = ?, startdate = ?, enddate = ?, description = ? WHERE id = ?
         `);
     
-    try {
+    try { //Uppdaterar data
         const result = stmt.run(companyname, jobtitle, location, startdate, enddate, description, req.params.id); 
         res.status(201).json({ id: result.lastInsertRowid, ...req.body });
     } catch (error) {
-        res.status(500).json({ message: "Arbetserfarenheten kunde inte uppdateras" }); 
+        res.status(500).json({ message: "Arbetserfarenheten kunde inte uppdateras" }); //Felmeddelande
     }
 })
 
+//Raderar data från databasen 
 app.delete("/workexperience/:id", (req, res) => {
     const result = db.prepare(`
         DELETE FROM workexperience WHERE id = ?`).run(req.params.id); 
         res.json({ message: "Arbetserfarenheten borttagen"}); 
 })
+
+//Startar servern
+app.listen(5000, () => console.log("Servern är startad på port: 5000")); 
